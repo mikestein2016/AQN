@@ -2872,6 +2872,41 @@ SetWrapping(w){this._SetWrapByWord(w===0)}}};
 'use strict';{const C3=self.C3;C3.Plugins.Text.Exps={Text(){return this._text},PlainText(){if(this._enableBBcode)return C3.BBString.StripAnyTags(this._text);else return this._text},FaceName(){return this._faceName},FaceSize(){return this._ptSize},TextWidth(){this._UpdateTextSize();return this._rendererText.GetTextWidth()},TextHeight(){this._UpdateTextSize();return this._rendererText.GetTextHeight()},LineHeight(){return this._lineHeightOffset}}};
 
 
+'use strict';{const C3=self.C3;C3.Plugins.Arr=class ArrayPlugin extends C3.SDKPluginBase{constructor(opts){super(opts)}Release(){super.Release()}}};
+
+
+'use strict';{const C3=self.C3;C3.Plugins.Arr.Type=class ArrayType extends C3.SDKTypeBase{constructor(objectClass){super(objectClass)}Release(){super.Release()}OnCreate(){}}};
+
+
+'use strict';{const C3=self.C3;const IInstance=self.IInstance;function ResizeArray(arr,len,data){if(len<arr.length)C3.truncateArray(arr,len);else if(len>arr.length)if(typeof data==="function")for(let i=arr.length;i<len;++i)arr.push(data());else for(let i=arr.length;i<len;++i)arr.push(data)}C3.Plugins.Arr.Instance=class ArrayInstance extends C3.SDKInstanceBase{constructor(inst,properties){super(inst);this._cx=10;this._cy=1;this._cz=1;this._arr=null;this._forX=[];this._forY=[];this._forZ=[];this._forDepth=
+-1;if(properties){this._cx=properties[0];this._cy=properties[1];this._cz=properties[2]}this._arr=C3.MakeFilledArray(this._cx,()=>C3.MakeFilledArray(this._cy,()=>C3.MakeFilledArray(this._cz,0)))}Release(){this._arr=null;super.Release()}At(x,y,z){x=Math.floor(x);y=Math.floor(y);z=Math.floor(z);if(x>=0&&x<this._cx&&y>=0&&y<this._cy&&z>=0&&z<this._cz)return this._arr[x][y][z];else return 0}Set(x,y,z,val){x=Math.floor(x);y=Math.floor(y);z=Math.floor(z);if(x>=0&&x<this._cx&&y>=0&&y<this._cy&&z>=0&&z<this._cz)this._arr[x][y][z]=
+val}SetSize(w,h,d){w=Math.floor(w);h=Math.floor(h);d=Math.floor(d);if(w<0)w=0;if(h<0)h=0;if(d<0)d=0;if(this._cx===w&&this._cy===h&&this._cz===d)return;this._cx=w;this._cy=h;this._cz=d;const arr=this._arr;ResizeArray(arr,w,()=>C3.MakeFilledArray(h,()=>C3.MakeFilledArray(d,0)));for(let x=0;x<w;++x){ResizeArray(arr[x],h,()=>C3.MakeFilledArray(d,0));for(let y=0;y<h;++y)ResizeArray(arr[x][y],d,0)}}GetWidth(){return this._cx}GetHeight(){return this._cy}GetDepth(){return this._cz}GetDebuggerProperties(){const prefix=
+"plugins.arr.debugger";const propsPrefix="plugins.arr.properties";const ret=[{title:prefix+".array-properties.title",properties:[{name:propsPrefix+".width.name",value:this._cx,onedit:v=>this.SetSize(v,this._cy,this._cz)},{name:propsPrefix+".height.name",value:this._cy,onedit:v=>this.SetSize(this._cx,v,this._cz)},{name:propsPrefix+".depth.name",value:this._cz,onedit:v=>this.SetSize(this._cx,this._cy,v)},{name:propsPrefix+".elements.name",value:this._cx*this._cy*this._cz}]}];const dataProps=[];if(this._cy===
+1&&this._cz===1)for(let x=0;x<this._cx;++x)dataProps.push({name:"$"+x,value:this._arr[x][0][0],onedit:v=>this._arr[x][0][0]=v});else for(let x=0;x<this._cx;++x)dataProps.push({name:"$"+x,value:this._arr[x].toString()});if(dataProps.length)ret.push({title:prefix+".array-data.title",properties:dataProps});return ret}GetAsJsonString(){return JSON.stringify({"c2array":true,"size":[this._cx,this._cy,this._cz],"data":this._arr})}SaveToJson(){return{"size":[this._cx,this._cy,this._cz],"data":this._arr}}LoadFromJson(o){const sz=
+o["size"];this._cx=sz[0];this._cy=sz[1];this._cz=sz[2];this._arr=o["data"]}_GetForX(){if(this._forDepth>=0&&this._forDepth<this._forX.length)return this._forX[this._forDepth];else return 0}_GetForY(){if(this._forDepth>=0&&this._forDepth<this._forY.length)return this._forY[this._forDepth];else return 0}_GetForZ(){if(this._forDepth>=0&&this._forDepth<this._forZ.length)return this._forZ[this._forDepth];else return 0}GetScriptInterfaceClass(){return self.IArrayInstance}};const map=new WeakMap;self.IArrayInstance=
+class IArrayInstance extends IInstance{constructor(){super();map.set(this,IInstance._GetInitInst().GetSdkInstance())}get width(){return map.get(this).GetWidth()}get height(){return map.get(this).GetHeight()}get depth(){return map.get(this).GetDepth()}setSize(w,h=1,d=1){map.get(this).SetSize(w,h,d)}getAt(x,y=0,z=0){return map.get(this).At(x,y,z)}setAt(val,x,y=0,z=0){if(typeof val!=="number"&&typeof val!=="string")throw new TypeError("invalid type");map.get(this).Set(x,y,z,val)}}};
+
+
+'use strict';{const C3=self.C3;function DoForEachTrigger(eventSheetManager,currentEvent,solModifiers,oldFrame,newFrame){eventSheetManager.PushCopySol(solModifiers);currentEvent.Retrigger(oldFrame,newFrame);eventSheetManager.PopSol(solModifiers)}C3.Plugins.Arr.Cnds={CompareX(x,cmp,val){return C3.compare(this.At(x,0,0),cmp,val)},CompareXY(x,y,cmp,val){return C3.compare(this.At(x,y,0),cmp,val)},CompareXYZ(x,y,z,cmp,val){return C3.compare(this.At(x,y,z),cmp,val)},ArrForEach(dims){const runtime=this._runtime;
+const eventSheetManager=runtime.GetEventSheetManager();const currentEvent=runtime.GetCurrentEvent();const solModifiers=currentEvent.GetSolModifiers();const eventStack=runtime.GetEventStack();const oldFrame=eventStack.GetCurrentStackFrame();const newFrame=eventStack.Push(currentEvent);const forDepth=++this._forDepth;const forX=this._forX;const forY=this._forY;const forZ=this._forZ;const cx=this._cx;const cy=this._cy;const cz=this._cz;if(forDepth===this._forX.length){forX.push(0);forY.push(0);forZ.push(0)}else{forX[forDepth]=
+0;forY[forDepth]=0;forZ[forDepth]=0}runtime.SetDebuggingEnabled(false);if(dims===0)for(let x=0;x<cx;++x)for(let y=0;y<cy;++y)for(let z=0;z<cz;++z){forX[forDepth]=x;forY[forDepth]=y;forZ[forDepth]=z;DoForEachTrigger(eventSheetManager,currentEvent,solModifiers,oldFrame,newFrame)}else if(dims===1)for(let x=0;x<cx;++x)for(let y=0;y<cy;++y){forX[forDepth]=x;forY[forDepth]=y;DoForEachTrigger(eventSheetManager,currentEvent,solModifiers,oldFrame,newFrame)}else for(let x=0;x<cx;++x){forX[forDepth]=x;DoForEachTrigger(eventSheetManager,
+currentEvent,solModifiers,oldFrame,newFrame)}runtime.SetDebuggingEnabled(true);this._forDepth--;eventStack.Pop();return false},CompareCurrent(cmp,val){return C3.compare(this.At(this._GetForX(),this._GetForY(),this._GetForZ()),cmp,val)},Contains(val){const cx=this._cx;const cy=this._cy;const cz=this._cz;const arr=this._arr;for(let x=0;x<cx;++x)for(let y=0;y<cy;++y)for(let z=0;z<cz;++z)if(arr[x][y][z]===val)return true;return false},IsEmpty(){return this._cx===0||this._cy===0||this._cz===0},CompareSize(axis,
+cmp,val){let s=0;switch(axis){case 0:s=this._cx;break;case 1:s=this._cy;break;case 2:s=this._cz;break}return C3.compare(s,cmp,val)}}};
+
+
+'use strict';{const C3=self.C3;function CompareValues(va,vb){if(typeof va==="number"&&typeof vb==="number")return va-vb;else{const sa=va.toString();const sb=vb.toString();if(sa<sb)return-1;else if(sa>sb)return 1;else return 0}}C3.Plugins.Arr.Acts={Clear(v){const cx=this._cx;const cy=this._cy;const cz=this._cz;const arr=this._arr;for(let x=0;x<cx;++x)for(let y=0;y<cy;++y)for(let z=0;z<cz;++z)arr[x][y][z]=v},SetSize(w,h,d){this.SetSize(w,h,d)},SetX(x,val){this.Set(x,0,0,val)},SetXY(x,y,val){this.Set(x,
+y,0,val)},SetXYZ(x,y,z,val){this.Set(x,y,z,val)},Push(where,value,axis){const cx=this._cx;const cy=this._cy;const cz=this._cz;const arr=this._arr;if(axis===0){const add=C3.MakeFilledArray(cy,()=>C3.MakeFilledArray(cz,value));if(where===0)arr.push(add);else arr.unshift(add);this._cx++}else if(axis===1){for(let x=0;x<cx;++x){const add=C3.MakeFilledArray(cz,value);if(where===0)arr[x].push(add);else arr[x].unshift(add)}this._cy++}else{for(let x=0;x<cx;++x)for(let y=0;y<cy;++y)if(where===0)arr[x][y].push(value);
+else arr[x][y].unshift(value);this._cz++}},Pop(where,axis){const cx=this._cx;const cy=this._cy;const cz=this._cz;const arr=this._arr;if(axis===0){if(cx===0)return;if(where===0)arr.pop();else arr.shift();this._cx--}else if(axis===1){if(cy===0)return;for(let x=0;x<cx;++x)if(where===0)arr[x].pop();else arr[x].shift();this._cy--}else{if(cz===0)return;for(let x=0;x<cx;++x)for(let y=0;y<cy;++y)if(where===0)arr[x][y].pop();else arr[x][y].shift();this._cz--}},Reverse(axis){const cx=this._cx;const cy=this._cy;
+const cz=this._cz;const arr=this._arr;if(cx===0||cy===0||cz===0)return;if(axis===0)arr.reverse();else if(axis===1)for(let x=0;x<cx;++x)arr[x].reverse();else for(let x=0;x<cx;++x)for(let y=0;y<cy;++y)arr[x][y].reverse()},Sort(axis){const cx=this._cx;const cy=this._cy;const cz=this._cz;const arr=this._arr;if(cx===0||cy===0||cz===0)return;if(axis===0)arr.sort((a,b)=>CompareValues(a[0][0],b[0][0]));else if(axis===1)for(let x=0;x<cx;++x)arr[x].sort((a,b)=>CompareValues(a[0],b[0]));else for(let x=0;x<cx;++x)for(let y=
+0;y<cy;++y)arr[x][y].sort(CompareValues)},Delete(index,axis){index=Math.floor(index);if(index<0)return;const cx=this._cx;const cy=this._cy;const cz=this._cz;const arr=this._arr;if(axis===0){if(index>=cx)return;arr.splice(index,1);this._cx--}else if(axis===1){if(index>=cy)return;for(let x=0;x<cx;++x)arr[x].splice(index,1);this._cy--}else{if(index>=cz)return;for(let x=0;x<cx;++x)for(let y=0;y<cy;++y)arr[x][y].splice(index,1);this._cz--}},Insert(value,index,axis){index=Math.floor(index);if(index<0)return;
+const cx=this._cx;const cy=this._cy;const cz=this._cz;const arr=this._arr;if(axis===0){if(index>cx)return;arr.splice(index,0,C3.MakeFilledArray(cy,()=>C3.MakeFilledArray(cz,value)));this._cx++}else if(axis===1){if(index>cy)return;for(let x=0;x<cx;++x)arr[x].splice(index,0,C3.MakeFilledArray(cz,value));this._cy++}else{if(index>cz)return;for(let x=0;x<cx;++x)for(let y=0;y<cy;++y)arr[x][y].splice(index,0,value);this._cz++}},JSONLoad(json){let o=null;try{o=JSON.parse(json)}catch(err){console.error("[Construct 3] Failed to parse JSON: ",
+err);return}if(!o["c2array"])return;const sz=o["size"];this._cx=sz[0];this._cy=sz[1];this._cz=sz[2];this._arr=o["data"]},JSONDownload(filename){const url=URL.createObjectURL(new Blob([this.GetAsJsonString()],{type:"application/json"}));this._runtime.InvokeDownload(url,filename)}}};
+
+
+'use strict';{const C3=self.C3;C3.Plugins.Arr.Exps={At(x,y,z){return this.At(x,y||0,z||0)},Width(){return this._cx},Height(){return this._cy},Depth(){return this._cz},CurX(){return this._GetForX()},CurY(){return this._GetForY()},CurZ(){return this._GetForZ()},CurValue(){return this.At(this._GetForX(),this._GetForY(),this._GetForZ())},Front(){return this.At(0,0,0)},Back(){return this.At(this._cx-1,0,0)},IndexOf(v){const arr=this._arr;for(let x=0,len=this._cx;x<len;++x)if(arr[x][0][0]===v)return x;
+return-1},LastIndexOf(v){const arr=this._arr;for(let x=this._cx-1;x>=0;--x)if(arr[x][0][0]===v)return x;return-1},AsJSON(){return this.GetAsJsonString()}}};
+
+
 'use strict';{const C3=self.C3;C3.Behaviors.Fade=class FadeBehavior extends C3.SDKBehaviorBase{constructor(opts){super(opts)}Release(){super.Release()}}};
 
 
@@ -3086,6 +3121,7 @@ newY);wi.SetBboxChanged()}}else if(this._axes===1){if(wi.GetX()!==newX){wi.SetX(
 		C3.Plugins.Text,
 		C3.Behaviors.Pin,
 		C3.Behaviors.Tween,
+		C3.Plugins.Arr,
 		C3.Behaviors.DragnDrop,
 		C3.Plugins.System.Cnds.IsGroupActive,
 		C3.Plugins.Audio.Cnds.IsTagPlaying,
@@ -3112,6 +3148,9 @@ newY);wi.SetBboxChanged()}}else if(this._axes===1){if(wi.GetX()!==newX){wi.SetX(
 		C3.Plugins.LocalStorage.Acts.SetItem,
 		C3.Plugins.Sprite.Acts.StopAnim,
 		C3.Plugins.Audio.Acts.PlayByName,
+		C3.Behaviors.DragnDrop.Cnds.IsDragging,
+		C3.Behaviors.DragnDrop.Cnds.OnDrop,
+		C3.Plugins.Sprite.Cnds.IsOverlapping,
 		C3.Plugins.Audio.Cnds.OnEnded,
 		C3.Plugins.System.Acts.Wait,
 		C3.Behaviors.MoveTo.Acts.MoveToPosition,
@@ -3124,8 +3163,6 @@ newY);wi.SetBboxChanged()}}else if(this._axes===1){if(wi.GetX()!==newX){wi.SetX(
 		C3.Behaviors.Pin.Acts.PinByProperties,
 		C3.Behaviors.Pin.Acts.Unpin,
 		C3.Plugins.Audio.Acts.Stop,
-		C3.Behaviors.DragnDrop.Cnds.OnDrop,
-		C3.Plugins.Sprite.Cnds.IsOverlapping,
 		C3.Plugins.Sprite.Acts.SetSize,
 		C3.Plugins.System.Acts.GoToLayout,
 		C3.Plugins.System.Cnds.CompareBetween,
@@ -3138,7 +3175,6 @@ newY);wi.SetBboxChanged()}}else if(this._axes===1){if(wi.GetX()!==newX){wi.SetX(
 		C3.Plugins.System.Acts.AddVar,
 		C3.Behaviors.DragnDrop.Cnds.IsEnabled,
 		C3.Plugins.System.Acts.CreateObjectByName,
-		C3.Behaviors.DragnDrop.Cnds.IsDragging,
 		C3.Plugins.Sprite.Acts.SetX,
 		C3.Behaviors.Fade.Acts.SetWaitTime,
 		C3.Plugins.Sprite.Acts.StartAnim,
@@ -3148,23 +3184,33 @@ newY);wi.SetBboxChanged()}}else if(this._axes===1){if(wi.GetX()!==newX){wi.SetX(
 		C3.Plugins.System.Acts.SetTimescale,
 		C3.Plugins.Audio.Acts.SetPaused,
 		C3.Plugins.System.Cnds.OnLayoutEnd,
-		C3.Plugins.Browser.Exps.ExecJS,
-		C3.Plugins.System.Acts.LoadState,
-		C3.Plugins.System.Cnds.OnLoadComplete,
+		C3.Plugins.LocalStorage.Acts.CheckItemExists,
+		C3.Plugins.LocalStorage.Cnds.OnItemExists,
+		C3.Plugins.LocalStorage.Acts.GetItem,
+		C3.Plugins.LocalStorage.Cnds.OnItemGet,
+		C3.Plugins.LocalStorage.Exps.ItemValue,
 		C3.Plugins.System.Acts.RestartLayout,
 		C3.Plugins.Sprite.Cnds.IsAnimPlaying,
 		C3.Plugins.System.Acts.SaveState,
-		C3.Plugins.System.Cnds.For,
-		C3.Plugins.System.Cnds.EveryTick,
+		C3.Plugins.Browser.Exps.ExecJS,
+		C3.Plugins.System.Acts.LoadState,
+		C3.Plugins.System.Cnds.OnLoadComplete,
+		C3.Plugins.System.Acts.SetBoolVar,
+		C3.Plugins.Arr.Acts.Push,
+		C3.Plugins.System.Exps.choose,
+		C3.Plugins.Arr.Exps.At,
+		C3.Plugins.Arr.Acts.Pop,
+		C3.Behaviors.Pin.Cnds.IsPinned,
+		C3.Plugins.Arr.Acts.SetSize,
 		C3.Behaviors.Tween.Cnds.OnTweensFinished,
 		C3.Behaviors.Tween.Acts.TweenTwoProperties,
 		C3.Behaviors.Tween.Acts.TweenOneProperty,
 		C3.Plugins.Text.Acts.Destroy,
-		C3.Behaviors.Fade.Cnds.OnFadeOutEnd,
-		C3.Plugins.Sprite.Cnds.CompareY,
+		C3.Plugins.System.Acts.SubVar,
+		C3.Plugins.System.Cnds.EveryTick,
+		C3.Plugins.Text.Acts.SetText,
 		C3.Plugins.Sprite.Acts.SetMirrored,
 		C3.Plugins.System.Cnds.CompareVar,
-		C3.Plugins.Text.Acts.SetText,
 		C3.Plugins.Text.Acts.SetSize,
 		C3.Plugins.Text.Acts.SetHAlign,
 		C3.Plugins.Text.Acts.SetVAlign,
@@ -3172,11 +3218,8 @@ newY);wi.SetBboxChanged()}}else if(this._axes===1){if(wi.GetX()!==newX){wi.SetX(
 		C3.Plugins.Text.Acts.SetFontSize,
 		C3.Plugins.Text.Acts.SetFontColor,
 		C3.Plugins.System.Exps.rgbex255,
-		C3.Plugins.LocalStorage.Acts.CheckItemExists,
-		C3.Plugins.LocalStorage.Cnds.OnItemExists,
-		C3.Plugins.LocalStorage.Acts.GetItem,
-		C3.Plugins.LocalStorage.Cnds.OnItemGet,
-		C3.Plugins.LocalStorage.Exps.ItemValue,
+		C3.Plugins.Sprite.Acts.SetAnimFrame,
+		C3.Plugins.Text.Acts.SetOpacity,
 		C3.Plugins.Button.Cnds.CompareInstanceVar,
 		C3.Plugins.Button.Cnds.IsVisible,
 		C3.Plugins.System.Acts.GoToLayoutByName,
@@ -3290,11 +3333,14 @@ newY);wi.SetBboxChanged()}}else if(this._axes===1){if(wi.GetX()!==newX){wi.SetX(
 		{Hundreds_L: 0},
 		{Tens_L: 0},
 		{Unit_L: 0},
+		{L1_Numbers: 0},
+		{Miner_Trolley: 0},
 		{ProgressBar: 0},
 		{L0_Objects: 0},
 		{Number_Cards: 0},
 		{DragDrop2: 0},
 		{Fade2: 0},
+		{Pin2: 0},
 		{NC_Ones: 0},
 		{NC_Hundreds: 0},
 		{NC_Tens: 0},
@@ -3318,8 +3364,126 @@ newY);wi.SetBboxChanged()}}else if(this._axes===1){if(wi.GetX()!==newX){wi.SetX(
 		{L1_HintWatching: 0},
 		{L1_HintTutorialTimeSpent: 0},
 		{L1_RewardPoints: 0},
+		{L1_1Correct: 0},
+		{L1_1Incorrect: 0},
+		{L1_2Correct: 0},
+		{L1_2Incorrect: 0},
+		{L1_3Correct: 0},
+		{L1_3Incorrect: 0},
+		{L1_4Correct: 0},
+		{L1_4Incorrect: 0},
+		{L1_5Correct: 0},
+		{L1_5Incorrect: 0},
+		{L1_6Correct: 0},
+		{L1_6Incorrect: 0},
+		{L1_7Correct: 0},
+		{L1_7Incorrect: 0},
+		{L1_8Correct: 0},
+		{L1_8Incorrect: 0},
+		{L1_9Correct: 0},
+		{L1_9Incorrect: 0},
+		{L1_10Correct: 0},
+		{L1_10Incorrect: 0},
+		{L1_20Correct: 0},
+		{L1_20Incorrect: 0},
+		{L1_30Correct: 0},
+		{L1_30Incorrect: 0},
+		{L1_40Correct: 0},
+		{L1_40Incorrect: 0},
+		{L1_50Correct: 0},
+		{L1_50Incorrect: 0},
+		{L1_60Correct: 0},
+		{L1_60Incorrect: 0},
+		{L1_70Correct: 0},
+		{L1_70Incorrect: 0},
+		{L1_80Correct: 0},
+		{L1_80Incorrect: 0},
+		{L1_90Correct: 0},
+		{L1_90Incorrect: 0},
+		{L1_100Correct: 0},
+		{L1_100Incorrect: 0},
+		{L1_200Correct: 0},
+		{L1_200Incorrect: 0},
+		{L1_300Correct: 0},
+		{L1_300Incorrect: 0},
+		{L1_400Correct: 0},
+		{L1_400Incorrect: 0},
+		{L1_500Correct: 0},
+		{L1_500Incorrect: 0},
+		{L1_600Correct: 0},
+		{L1_600Incorrect: 0},
+		{L1_700Correct: 0},
+		{L1_700Incorrect: 0},
+		{L1_800Correct: 0},
+		{L1_800Incorrect: 0},
+		{L1_900Correct: 0},
+		{L1_900Incorrect: 0},
+		{L1_1PosX: 0},
+		{L1_1PosY: 0},
+		{L1_2PosX: 0},
+		{L1_2PosY: 0},
+		{L1_3PosX: 0},
+		{L1_3PosY: 0},
+		{L1_4PosX: 0},
+		{L1_4PosY: 0},
+		{L1_5PosX: 0},
+		{L1_5PosY: 0},
+		{L1_6PosX: 0},
+		{L1_6PosY: 0},
+		{L1_7PosX: 0},
+		{L1_7PosY: 0},
+		{L1_8PosX: 0},
+		{L1_8PosY: 0},
+		{L1_9PosX: 0},
+		{L1_9PosY: 0},
+		{L1_10PosX: 0},
+		{L1_10PosY: 0},
+		{L1_20PosX: 0},
+		{L1_20PosY: 0},
+		{L1_30PosX: 0},
+		{L1_30PosY: 0},
+		{L1_40PosX: 0},
+		{L1_40PosY: 0},
+		{L1_50PosX: 0},
+		{L1_50PosY: 0},
+		{L1_60PosX: 0},
+		{L1_60PosY: 0},
+		{L1_70PosX: 0},
+		{L1_70PosY: 0},
+		{L1_80PosX: 0},
+		{L1_80PosY: 0},
+		{L1_90PosX: 0},
+		{L1_90PosY: 0},
+		{L1_100PosX: 0},
+		{L1_100PosY: 0},
+		{L1_200PosX: 0},
+		{L1_200PosY: 0},
+		{L1_300PosX: 0},
+		{L1_300PosY: 0},
+		{L1_400PosX: 0},
+		{L1_400PosY: 0},
+		{L1_500PosX: 0},
+		{L1_500PosY: 0},
+		{L1_600PosX: 0},
+		{L1_600PosY: 0},
+		{L1_700PosX: 0},
+		{L1_700PosY: 0},
+		{L1_800PosX: 0},
+		{L1_800PosY: 0},
+		{L1_900PosX: 0},
+		{L1_900PosY: 0},
+		{L1_NumberReplayCounter: 0},
+		{L1_NumberReplayEnabled: 0},
+		{DragEnabled: 0},
+		{L1_ArraySet: 0},
+		{L1_CurrentNumber: 0},
+		{L1_CorrectStreak: 0},
+		{L1_NumberCorrect: 0},
+		{L1_End: 0},
+		{L1_Completed: 0},
 		{L1_Tutorial_TimeSpent: 0},
 		{L1_Tutorial_Completed: 0},
+		{L1_TutorialStep: 0},
 		{L2_Date: 0},
 		{L2_TimeSpent: 0},
 		{L2_Completed: 0},
@@ -3330,11 +3494,17 @@ newY);wi.SetBboxChanged()}}else if(this._axes===1){if(wi.GetX()!==newX){wi.SetX(
 		{L2_RewardPoints: 0},
 		{L2_Tutorial_TimeSpent: 0},
 		{L2_Tutorial_Completed: 0},
-		{L3_ProgressBarStep: 0},
-		{L1_Completed: 0},
+		{Language: 0},
 		{MusicMuted: 0},
+		{IdleTap: 0},
+		{TimePaused: 0},
+		{L3_ProgressBarStep: 0},
 		{CurrentAudio: 0},
+		{TouchEnabled: 0},
 		{PB_Created: 0},
+		{Reward: 0},
+		{RewardPoints: 0},
+		{RewardCounter: 0},
 		{L3_Tutorial_TimeSpent: 0},
 		{L3_Tutorial_Completed: 0},
 		{L3_Date: 0},
@@ -3346,7 +3516,6 @@ newY);wi.SetBboxChanged()}}else if(this._axes===1){if(wi.GetX()!==newX){wi.SetX(
 		{L3_HintTutorialTimeSpent: 0},
 		{L3_RewardPoints: 0},
 		{CurrentGame: 0},
-		{Language: 0},
 		{CurrentLevel: 0},
 		{L4_Date: 0},
 		{L4_TimeSpent_Try: 0},
@@ -3501,6 +3670,10 @@ newY);wi.SetBboxChanged()}}else if(this._axes===1){if(wi.GetX()!==newX){wi.SetX(
 			const v0 = p._GetNode(0).GetVar();
 			return () => ("AQN_A_L0_1" + v0.GetValue());
 		},
+		() => 210,
+		() => 370,
+		() => 485,
+		() => 725,
 		() => 0.5,
 		() => 115,
 		() => 380,
@@ -3509,10 +3682,7 @@ newY);wi.SetBboxChanged()}}else if(this._axes===1){if(wi.GetX()!==newX){wi.SetX(
 			const v0 = p._GetNode(0).GetVar();
 			return () => ("AQN_A_L0_2" + v0.GetValue());
 		},
-		() => 210,
 		() => 190,
-		() => 485,
-		() => 725,
 		() => 1,
 		p => {
 			const v0 = p._GetNode(0).GetVar();
@@ -3529,7 +3699,6 @@ newY);wi.SetBboxChanged()}}else if(this._axes===1){if(wi.GetX()!==newX){wi.SetX(
 		() => "AQN_A_L0_4",
 		() => 3,
 		() => 630,
-		() => 370,
 		() => "AQN_A_L0_5",
 		() => "AQN_A_L0_6",
 		() => 4,
@@ -3679,14 +3848,66 @@ newY);wi.SetBboxChanged()}}else if(this._axes===1){if(wi.GetX()!==newX){wi.SetX(
 		() => "P_ImageSound",
 		() => "GL_A_7",
 		() => "GL_A_1",
-		() => "MusicL1",
-		p => {
-			const f0 = p._GetNode(0).GetBoundMethod();
-			return () => f0("Date()");
-		},
-		() => "PI_L1",
-		() => "L1_GameSave",
-		() => "PID Data L1",
+		() => "Music L1",
+		() => "Data L1",
+		() => "L1 Get Number Variables From Storage",
+		() => "L1 On Start",
+		() => "L1_1Correct",
+		() => "L1_1Incorrect",
+		() => "L1_2Correct",
+		() => "L1_2Incorrect",
+		() => "L1_3Correct",
+		() => "L1_3Incorrect",
+		() => "L1_4Correct",
+		() => "L1_4Incorrect",
+		() => "L1_5Correct",
+		() => "L1_5Incorrect",
+		() => "L1_6Correct",
+		() => "L1_6Incorrect",
+		() => "L1_7Correct",
+		() => "L1_7Incorrect",
+		() => "L1_8Correct",
+		() => "L1_8Incorrect",
+		() => "L1_9Correct",
+		() => "L1_9Incorrect",
+		() => "L1_10Correct",
+		() => "L1_10Incorrect",
+		() => "L1_20Correct",
+		() => "L1_20Incorrect",
+		() => "L1_30Correct",
+		() => "L1_30Incorrect",
+		() => "L1_40Correct",
+		() => "L1_40Incorrect",
+		() => "L1_50Correct",
+		() => "L1_50Incorrect",
+		() => "L1_60Correct",
+		() => "L1_60Incorrect",
+		() => "L1_70Correct",
+		() => "L1_70Incorrect",
+		() => "L1_80Correct",
+		() => "L1_80Incorrect",
+		() => "L1_90Correct",
+		() => "L1_90Incorrect",
+		() => "L1_100Correct",
+		() => "L1_100Incorrect",
+		() => "L1_200Correct",
+		() => "L1_200Incorrect",
+		() => "L1_300Correct",
+		() => "L1_300Incorrect",
+		() => "L1_400Correct",
+		() => "L1_400Incorrect",
+		() => "L1_500Correct",
+		() => "L1_500Incorrect",
+		() => "L1_600Correct",
+		() => "L1_600Incorrect",
+		() => "L1_700Correct",
+		() => "L1_700Incorrect",
+		() => "L1_800Correct",
+		() => "L1_800Incorrect",
+		() => "L1_900Correct",
+		() => "L1_900Incorrect",
+		() => "L1 Get & Set",
+		() => "L1 On End",
 		() => "PID UI L1",
 		() => "GL_A_4",
 		() => "GL_A_5",
@@ -3696,20 +3917,325 @@ newY);wi.SetBboxChanged()}}else if(this._axes===1){if(wi.GetX()!==newX){wi.SetX(
 		() => "GL_A_17",
 		() => "CorrectSound",
 		() => "IncorrectSound",
-		() => "ch",
-		() => "ch_correct",
-		() => "ph",
-		() => "qu",
-		() => "th",
-		() => "sh",
-		() => "wh",
-		() => "PI_Correct",
-		() => "PI_Incorrect",
-		() => "Set Array Train Phonographs",
+		() => "L1_GameSave",
+		() => "CurrentNumberCollect",
+		p => {
+			const v0 = p._GetNode(0).GetVar();
+			return () => (v0.GetValue() + "Collect");
+		},
+		() => "Correct",
+		p => {
+			const f0 = p._GetNode(0).GetBoundMethod();
+			return () => f0("Date()");
+		},
+		() => "L1",
+		() => 215,
+		() => "Number Cards",
+		() => "Number Replay Counter",
+		() => 14,
+		() => "Miner",
+		p => {
+			const f0 = p._GetNode(0).GetBoundMethod();
+			return () => f0(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 200, 300, 400, 500, 600, 700, 800, 900);
+		},
+		p => {
+			const n0 = p._GetNode(0);
+			return () => n0.ExpObject(0);
+		},
+		() => "CurrentNumberCorrect",
+		() => -200,
 		() => "",
-		() => "Phonolabels L1",
-		() => 1.5,
-		() => "PID End L1",
+		() => "ArrayL1_Number",
+		() => "Set Board L1",
+		() => "L1 Current Number Set Pos",
+		() => "L1 Ones Set",
+		p => {
+			const f0 = p._GetNode(0).GetBoundMethod();
+			return () => and(f0(700, 300, 500), "_numberCards");
+		},
+		() => 375,
+		p => {
+			const f0 = p._GetNode(0).GetBoundMethod();
+			return () => and(f0(50, 70, 80), "_numberCards");
+		},
+		() => 330,
+		p => {
+			const f0 = p._GetNode(0).GetBoundMethod();
+			return () => and(f0(5, 3), "_numberCards");
+		},
+		p => {
+			const f0 = p._GetNode(0).GetBoundMethod();
+			return () => and(f0(8, 9), "_numberCards");
+		},
+		() => 460,
+		p => {
+			const f0 = p._GetNode(0).GetBoundMethod();
+			return () => and(f0(30, 10, 90), "_numberCards");
+		},
+		() => 535,
+		p => {
+			const f0 = p._GetNode(0).GetBoundMethod();
+			return () => and(f0(200, 600), "_numberCards");
+		},
+		() => 650,
+		p => {
+			const f0 = p._GetNode(0).GetBoundMethod();
+			return () => and(f0(2, 4), "_numberCards");
+		},
+		() => 145,
+		() => 445,
+		p => {
+			const f0 = p._GetNode(0).GetBoundMethod();
+			return () => and(f0(60, 20), "_numberCards");
+		},
+		() => 220,
+		() => "1_numberCards",
+		() => 295,
+		p => {
+			const f0 = p._GetNode(0).GetBoundMethod();
+			return () => and(f0(900, 800), "_numberCards");
+		},
+		() => 390,
+		p => {
+			const f0 = p._GetNode(0).GetBoundMethod();
+			return () => and(f0(7, 6), "_numberCards");
+		},
+		p => {
+			const f0 = p._GetNode(0).GetBoundMethod();
+			return () => and(f0(100, 400), "_numberCards");
+		},
+		() => 580,
+		() => "40_numberCards",
+		() => 695,
+		() => "2",
+		() => "2_numberCards",
+		p => {
+			const f0 = p._GetNode(0).GetBoundMethod();
+			return () => and(f0(4, 1), "_numberCards");
+		},
+		() => "3",
+		() => "5_numberCards",
+		() => "10_numberCards",
+		() => "3_numberCards",
+		p => {
+			const f0 = p._GetNode(0).GetBoundMethod();
+			return () => and(f0(2, 3, 4), "_numberCards");
+		},
+		p => {
+			const f0 = p._GetNode(0).GetBoundMethod();
+			return () => and(f0(30, 40, 90), "_numberCards");
+		},
+		() => "4",
+		p => {
+			const f0 = p._GetNode(0).GetBoundMethod();
+			return () => and(f0(2, 3), "_numberCards");
+		},
+		() => "4_numberCards",
+		() => "5",
+		p => {
+			const f0 = p._GetNode(0).GetBoundMethod();
+			return () => and(f0(1, 2, 3), "_numberCards");
+		},
+		() => 140,
+		p => {
+			const f0 = p._GetNode(0).GetBoundMethod();
+			return () => and(f0(400, 200, 300), "_numberCards");
+		},
+		() => 345,
+		p => {
+			const f0 = p._GetNode(0).GetBoundMethod();
+			return () => and(f0(40, 70), "_numberCards");
+		},
+		() => 425,
+		() => 510,
+		p => {
+			const f0 = p._GetNode(0).GetBoundMethod();
+			return () => and(f0(100, 500, 600), "_numberCards");
+		},
+		() => 615,
+		() => 715,
+		p => {
+			const f0 = p._GetNode(0).GetBoundMethod();
+			return () => and(f0(60, 90), "_numberCards");
+		},
+		() => 180,
+		() => "50_numberCards",
+		p => {
+			const f0 = p._GetNode(0).GetBoundMethod();
+			return () => and(f0(900, 800, 700), "_numberCards");
+		},
+		p => {
+			const f0 = p._GetNode(0).GetBoundMethod();
+			return () => and(f0(30, 20), "_numberCards");
+		},
+		() => 520,
+		() => 605,
+		p => {
+			const f0 = p._GetNode(0).GetBoundMethod();
+			return () => and(f0(10, 80), "_numberCards");
+		},
+		() => 685,
+		() => "6",
+		p => {
+			const f0 = p._GetNode(0).GetBoundMethod();
+			return () => and(f0(2, 3, 5), "_numberCards");
+		},
+		() => "6_numberCards",
+		() => "7_numberCards",
+		() => "7",
+		() => "8",
+		() => "8_numberCards",
+		p => {
+			const f0 = p._GetNode(0).GetBoundMethod();
+			return () => and(f0(5, 9), "_numberCards");
+		},
+		() => "9",
+		p => {
+			const f0 = p._GetNode(0).GetBoundMethod();
+			return () => and(f0(5, 8), "_numberCards");
+		},
+		() => "9_numberCards",
+		() => "Tens Set",
+		() => "10",
+		() => "30",
+		() => "30_numberCards",
+		p => {
+			const f0 = p._GetNode(0).GetBoundMethod();
+			return () => and(f0(40, 10, 90), "_numberCards");
+		},
+		() => "40",
+		() => "60",
+		p => {
+			const f0 = p._GetNode(0).GetBoundMethod();
+			return () => and(f0(900, 100), "_numberCards");
+		},
+		p => {
+			const f0 = p._GetNode(0).GetBoundMethod();
+			return () => and(f0(7, 3), "_numberCards");
+		},
+		() => 310,
+		p => {
+			const f0 = p._GetNode(0).GetBoundMethod();
+			return () => and(f0(20, 90), "_numberCards");
+		},
+		() => 385,
+		p => {
+			const f0 = p._GetNode(0).GetBoundMethod();
+			return () => and(f0(300, 700), "_numberCards");
+		},
+		p => {
+			const f0 = p._GetNode(0).GetBoundMethod();
+			return () => and(f0(10, 50), "_numberCards");
+		},
+		p => {
+			const f0 = p._GetNode(0).GetBoundMethod();
+			return () => and(f0(4, 2), "_numberCards");
+		},
+		() => 690,
+		p => {
+			const f0 = p._GetNode(0).GetBoundMethod();
+			return () => and(f0(9, 8), "_numberCards");
+		},
+		() => "60_numberCards",
+		p => {
+			const f0 = p._GetNode(0).GetBoundMethod();
+			return () => and(f0(1, 5), "_numberCards");
+		},
+		() => "200_numberCards",
+		p => {
+			const f0 = p._GetNode(0).GetBoundMethod();
+			return () => and(f0(70, 80), "_numberCards");
+		},
+		() => 560,
+		p => {
+			const f0 = p._GetNode(0).GetBoundMethod();
+			return () => and(f0(400, 500, 600, 800), "_numberCards");
+		},
+		() => 675,
+		() => "20",
+		p => {
+			const f0 = p._GetNode(0).GetBoundMethod();
+			return () => and(f0(60, 10), "_numberCards");
+		},
+		() => "20_numberCards",
+		() => "50",
+		p => {
+			const f0 = p._GetNode(0).GetBoundMethod();
+			return () => and(f0(30, 70, 80), "_numberCards");
+		},
+		() => "70",
+		() => "70_numberCards",
+		p => {
+			const f0 = p._GetNode(0).GetBoundMethod();
+			return () => and(f0(50, 40, 80), "_numberCards");
+		},
+		() => "80",
+		p => {
+			const f0 = p._GetNode(0).GetBoundMethod();
+			return () => and(f0(60, 70), "_numberCards");
+		},
+		() => "80_numberCards",
+		() => "90",
+		() => "90_numberCards",
+		p => {
+			const f0 = p._GetNode(0).GetBoundMethod();
+			return () => and(f0(60, 70, 80), "_numberCards");
+		},
+		() => "Hundreds Set",
+		() => "100",
+		() => "100_numberCards",
+		() => "200",
+		p => {
+			const f0 = p._GetNode(0).GetBoundMethod();
+			return () => and(f0(30, 60, 40), "_numberCards");
+		},
+		() => "900",
+		p => {
+			const f0 = p._GetNode(0).GetBoundMethod();
+			return () => and(f0(1, 2), "_numberCards");
+		},
+		p => {
+			const f0 = p._GetNode(0).GetBoundMethod();
+			return () => and(f0(3, 5), "_numberCards");
+		},
+		() => "900_numberCards",
+		() => "300",
+		() => "300_numberCards",
+		p => {
+			const f0 = p._GetNode(0).GetBoundMethod();
+			return () => and(f0(400, 200, 100), "_numberCards");
+		},
+		() => "400",
+		p => {
+			const f0 = p._GetNode(0).GetBoundMethod();
+			return () => and(f0(500, 600, 800), "_numberCards");
+		},
+		() => "400_numberCards",
+		() => "500",
+		() => "500_numberCards",
+		p => {
+			const f0 = p._GetNode(0).GetBoundMethod();
+			return () => and(f0(100, 600), "_numberCards");
+		},
+		() => "600",
+		() => "600_numberCards",
+		() => "700",
+		() => "700_numberCards",
+		() => "800",
+		() => "800_numberCards",
+		() => "L1 NumberPos",
+		() => "Answer Checker L1",
+		p => {
+			const n0 = p._GetNode(0);
+			return () => (n0.ExpObject() + 55);
+		},
+		p => {
+			const v0 = p._GetNode(0).GetVar();
+			return () => (v0.GetValue() + "Number");
+		},
+		() => "End L1",
+		() => 12,
+		() => 870,
 		() => "pop",
 		() => "disappear",
 		() => "opacity",
@@ -3717,22 +4243,51 @@ newY);wi.SetBboxChanged()}}else if(this._axes===1){if(wi.GetX()!==newX){wi.SetX(
 		() => "scale",
 		() => 265,
 		() => 585,
+		p => {
+			const v0 = p._GetNode(0).GetVar();
+			return () => ("GL_A_5" + v0.GetValue());
+		},
 		() => "Music T L1",
 		() => "Smile",
-		() => 840,
-		() => "Explain",
+		p => {
+			const v0 = p._GetNode(0).GetVar();
+			return () => ("AQN_A_L1_1" + v0.GetValue());
+		},
+		() => "AQN_A_L1_1",
+		() => 1200,
+		p => {
+			const v0 = p._GetNode(0).GetVar();
+			return () => ("AQN_A_L1_2" + v0.GetValue());
+		},
+		() => "AQN_A_L1_2",
 		() => "PID Data L1 Tutorial",
 		() => "PID UI L1 Tutorial",
 		() => "PID L1 Tutorial",
-		() => "PI_A_L1_1",
-		() => "PI_A_L1_2",
-		() => "PI_A_L1_3",
-		() => "Find_ch",
-		() => 390,
-		() => "PI_A_L1_5",
-		() => 45,
-		() => 460,
-		() => "PI_A_L1_11",
+		() => 840,
+		() => "Explain",
+		p => {
+			const v0 = p._GetNode(0).GetVar();
+			return () => ("AQN_A_L1_3" + v0.GetValue());
+		},
+		() => "AQN_A_L1_3",
+		p => {
+			const n0 = p._GetNode(0);
+			return () => (n0.ExpObject() + 105);
+		},
+		p => {
+			const v0 = p._GetNode(0).GetVar();
+			return () => ("AQN_A_L1_26" + v0.GetValue());
+		},
+		() => "AQN_A_L1_26",
+		p => {
+			const n0 = p._GetNode(0);
+			return () => (n0.ExpObject() + 25);
+		},
+		p => {
+			const v0 = p._GetNode(0).GetVar();
+			return () => ("AQN_A_L1_44" + v0.GetValue());
+		},
+		() => "AQN_A_L1_44",
 		p => {
 			const n0 = p._GetNode(0);
 			return () => (n0.ExpObject() - 135);
@@ -3744,10 +4299,10 @@ newY);wi.SetBboxChanged()}}else if(this._axes===1){if(wi.GetX()!==newX){wi.SetX(
 		() => "MusicL2",
 		() => "PI_L2",
 		() => 0.25,
+		() => 1.5,
 		() => "L2_GameSave",
 		() => "PID Data L2",
 		() => "PID UI L2",
-		() => "Correct",
 		() => "Honk2",
 		() => "Honk",
 		() => "CurrentWord",
@@ -3781,8 +4336,59 @@ newY);wi.SetBboxChanged()}}else if(this._axes===1){if(wi.GetX()!==newX){wi.SetX(
 		() => "ShelfCorrect",
 		() => "Trophy_Van",
 		() => "PI_A_L2_34",
+		() => 45,
 		() => 455,
 		() => "PI_A_L2_33",
+		() => "On Start",
+		() => "RewardPoints",
+		() => "L0_TimeSpent",
+		() => "L0_Completed",
+		() => "L0_PlayAgainTapped",
+		() => "L1_Tutorial_TimeSpent",
+		() => "L1_Tutorial_Completed",
+		() => "L1_TimeSpent",
+		() => "L1_Completed",
+		() => "L1_BackTapped",
+		() => "L1_HintTapped",
+		() => "L1_HintTutorialTimeSpent",
+		() => "L1_RewardPoints",
+		() => "L2_Tutorial_TimeSpent",
+		() => "L2_Tutorial_Completed",
+		() => "L2_TimeSpent",
+		() => "L2_Completed",
+		() => "L2_BackTapped",
+		() => "L2_HintTapped",
+		() => "L2_HintTutorialTimeSpent",
+		() => "L2_RewardPoints",
+		() => "L3_Tutorial_TimeSpent",
+		() => "L3_Tutorial_Completed",
+		() => "L3_TimeSpent",
+		() => "L3_Completed",
+		() => "L3_BackTapped",
+		() => "L3_HintTapped",
+		() => "L3_HintTutorialTimeSpent",
+		() => "L3_RewardPoints",
+		() => "L4_Tutorial_TimeSpent",
+		() => "L4_Tutorial_Completed",
+		() => "L4_TimeSpent",
+		() => "L4_Completed",
+		() => "L4_BackTapped",
+		() => "L4_HintTapped",
+		() => "L4_HintTutorialTimeSpent",
+		() => "L4_RewardPoints",
+		() => "Rewards",
+		() => "PID Get Item From Storage L0",
+		() => "PID Get Variables from Storage L1 Tutorial",
+		() => "L1_CompletedTries",
+		() => "PID Get Variables from Storage L1",
+		() => "On End",
+		() => "L1_Date",
+		() => "L1_TimeSpent_Try",
+		() => "L2_Date",
+		() => "L3_Date",
+		() => "L4_Date",
+		() => "L4_TotalTappedCorrect",
+		() => "L4_TotalTappedIncorrect",
 		() => "PID Progress Bar",
 		() => 39,
 		() => 333,
@@ -3796,13 +4402,11 @@ newY);wi.SetBboxChanged()}}else if(this._axes===1){if(wi.GetX()!==newX){wi.SetX(
 		() => 80.165931,
 		() => 21,
 		() => "Century Gothic",
-		() => 12,
 		p => {
 			const f0 = p._GetNode(0).GetBoundMethod();
 			return () => f0(255, 255, 255);
 		},
 		() => "L0",
-		() => "L1",
 		() => "L1 Tutorial",
 		() => "L2",
 		() => "PI_L2 Tutorial",
@@ -3810,11 +4414,19 @@ newY);wi.SetBboxChanged()}}else if(this._axes===1){if(wi.GetX()!==newX){wi.SetX(
 		() => "L3 Tutorial",
 		() => "L4",
 		() => "L4 Tutorial",
+		() => 11,
 		() => "PID Time Pause",
 		() => "PID Music",
+		() => "PI_A_L1_1",
+		() => "PI_A_L1_2",
+		() => "PI_A_L1_3",
+		() => "PI_A_L1_5",
+		() => "PI_A_L1_11",
 		() => "PI_A_L2_3",
 		() => "PI_A_L2_5",
 		() => "PI_A_L2_11",
+		() => "Reward_Collection",
+		() => 238,
 		() => "Music T L3",
 		() => "PI_L3",
 		() => "PI_A_L3_1",
@@ -3831,7 +4443,6 @@ newY);wi.SetBboxChanged()}}else if(this._axes===1){if(wi.GetX()!==newX){wi.SetX(
 		() => "Conch",
 		() => "sh_Touch",
 		() => 442,
-		() => 180,
 		() => "Ship2",
 		() => 552,
 		() => 296,
@@ -3844,7 +4455,6 @@ newY);wi.SetBboxChanged()}}else if(this._axes===1){if(wi.GetX()!==newX){wi.SetX(
 		() => "L3_SaveState",
 		() => "PID Get Variables from Storage L3 Tapped",
 		() => "PI L3 On Start",
-		() => "RewardPoints",
 		() => "PI_L3_sh_TappedIncorrect",
 		() => "PI_L3_sh_TappedCorrect",
 		() => "PI_L3_th_TappedCorrect",
@@ -4190,7 +4800,6 @@ newY);wi.SetBboxChanged()}}else if(this._axes===1){if(wi.GetX()!==newX){wi.SetX(
 		() => 3.6,
 		() => 127,
 		() => 3.7,
-		() => 220,
 		() => 4.5,
 		() => 5.5,
 		() => 401,
@@ -4200,11 +4809,6 @@ newY);wi.SetBboxChanged()}}else if(this._axes===1){if(wi.GetX()!==newX){wi.SetX(
 		() => 8.5,
 		() => 9.5,
 		() => 10.5,
-		p => {
-			const n0 = p._GetNode(0);
-			return () => (n0.ExpObject() + 25);
-		},
-		() => 11,
 		() => "PI_A_L4_5",
 		() => "PI_A_L4_6"
 	];

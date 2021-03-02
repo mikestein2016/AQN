@@ -5116,6 +5116,12 @@ newY);wi.SetBboxChanged()}}else if(this._axes===1){if(wi.GetX()!==newX){wi.SetX(
 			return () => ("GL_A_6" + v0.GetValue());
 		},
 		() => "GL_A_6",
+		p => {
+			const n0 = p._GetNode(0);
+			const n1 = p._GetNode(1);
+			const n2 = p._GetNode(2);
+			return () => and((and(and(n0.ExpObject(), " "), n1.ExpObject()) + " "), n2.ExpObject());
+		},
 		() => "Music T L4",
 		p => {
 			const v0 = p._GetNode(0).GetVar();

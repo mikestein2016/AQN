@@ -37,3 +37,8 @@ html, body, canvas {
 }
 
 
+@font-face {
+	font-family: 'kreedo-regular_20march2019';
+	src: url('fonts/kreedo-regular_20march2019.ttf') format('truetype');
+}
+

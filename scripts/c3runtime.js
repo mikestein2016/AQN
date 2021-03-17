@@ -4825,9 +4825,10 @@ newY);wi.SetBboxChanged()}}else if(this._axes===1){if(wi.GetX()!==newX){wi.SetX(
 		() => 785,
 		() => 25,
 		() => 763,
+		() => 23,
 		() => "0",
 		() => 80.165931,
-		() => "Century Gothic",
+		() => "Kreedo-Regular_20March2019",
 		p => {
 			const f0 = p._GetNode(0).GetBoundMethod();
 			return () => f0(255, 255, 255);
